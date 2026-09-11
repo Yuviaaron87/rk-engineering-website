@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, CheckCircle, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Loader2, Sparkles, MailCheck } from 'lucide-react';
 import { Button } from './Button';
 import { COMPANY_DETAILS } from '../constants/route';
+import { saveEnquiry } from '../utils/storage';
+import { sendEnquiryEmail } from '../utils/email';
 
 interface FormData {
   fullName: string;
@@ -50,6 +52,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialService = '' })
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [statusNote, setStatusNote] = useState<string>('');
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -92,17 +95,21 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialService = '' })
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 1200);
+    // 1. Save to local storage for Admin Portal access
+    saveEnquiry(formData);
+
+    // 2. Send via EmailJS to Kannan R
+    const result = await sendEnquiryEmail(formData);
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    setStatusNote(result.message);
   };
 
   const resetForm = () => {
@@ -116,6 +123,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialService = '' })
     });
     setErrors({});
     setIsSubmitted(false);
+    setStatusNote('');
   };
 
   return (
@@ -140,18 +148,25 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialService = '' })
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="py-10 text-center space-y-5"
+            className="py-8 text-center space-y-5"
           >
             <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
               <CheckCircle className="w-10 h-10" />
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-2xl font-bold text-slate-900">Enquiry Received!</h4>
+              <h4 className="text-2xl font-extrabold text-slate-900">Enquiry Submitted & Sent!</h4>
               <p className="text-slate-600 max-w-md mx-auto text-sm leading-relaxed">
-                Thank you <span className="text-sky-700 font-bold">{formData.fullName}</span>. Your enquiry for <span className="text-slate-900 font-semibold">{formData.serviceRequired}</span> has been logged. Kannan R will contact you shortly.
+                Thank you <span className="text-sky-700 font-bold">{formData.fullName}</span>. Your requirement for <span className="text-slate-900 font-semibold">{formData.serviceRequired}</span> has been dispatched to <span className="text-slate-900 font-bold">{COMPANY_DETAILS.email}</span> and logged in the RK ENGINEERING Admin portal.
               </p>
             </div>
+
+            {statusNote && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 text-xs font-semibold">
+                <MailCheck className="w-4 h-4 text-sky-600" />
+                <span>{statusNote}</span>
+              </div>
+            )}
 
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a

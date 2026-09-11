@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Zap, Phone, Mail, MapPin, User, ChevronRight } from 'lucide-react';
-import { COMPANY_DETAILS, NAV_ITEMS } from '../constants/route';
+import { COMPANY_DETAILS, NAV_ITEMS, ROUTES } from '../constants/route';
 
 export const Footer: React.FC = () => {
   const handleNavClick = (href: string) => {
@@ -143,10 +144,14 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} <strong className="text-slate-900 font-bold">{COMPANY_DETAILS.name}</strong>. All Rights Reserved.
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <span>Founder & Owner: <strong className="text-slate-900 font-bold">{COMPANY_DETAILS.owner}</strong></span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-600 font-medium">Industrial Electrical Contractors</span>
+            <span className="text-slate-300">|</span>
+            <Link to={ROUTES.ADMIN_LOGIN} className="text-sky-700 hover:text-sky-800 font-bold underline">
+              Admin Portal
+            </Link>
           </div>
         </div>
       </div>
